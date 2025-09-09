@@ -1,0 +1,81 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:4.0
+    container_name: mongodb
+    restart: always
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=adminpassword
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - app-network
+
+  chromadb:
+    image: chromadb/chroma:latest
+    container_name: chromadb
+    restart: always
+    ports:
+      - "8000:8000"
+    volumes:
+      - chromadb_data:/chroma/chroma
+    environment:
+      - ALLOW_RESET=true
+      - CHROMA_SERVER_HOST=0.0.0.0
+      - CHROMA_SERVER_PORT=8000
+    networks:
+      - app-network
+
+  binance-ws:
+    build: 
+      context: ./binance_ws
+    container_name: binance-ws
+    restart: always
+    depends_on:
+      - mongodb
+    environment:
+      - URI_MONGO=mongodb://admin:adminpassword@mongodb:27017/
+      - HOST_MONGODB=mongodb://admin:adminpassword@mongodb:27017/
+      - HOST_CHROMADB=chromadb
+      - PORT_CHROMADB=8000
+      - DB_HISTORY=cripto
+      - DB_ACTUALLY=cripto
+      - NAME_COIN=wif
+      - TOKEN_TELEGRAM=7568333649:AAFP499OGJLF-GxDAqzSe3YVwuvxvjW1ZcU
+      - WEB_SOCKET_BINANCE=wss://stream.binance.com:9443/ws/wifusdt@kline_1m
+    networks:
+      - app-network
+
+  telegram-bot:
+    build: 
+      context: ./bot_telegram
+    container_name: telegram-bot
+    restart: always
+    depends_on:
+      - mongodb
+      - chromadb
+    environment:
+      - URI_MONGO=mongodb://admin:adminpassword@mongodb:27017/
+      - HOST_MONGODB=mongodb://admin:adminpassword@mongodb:27017/
+      - HOST_CHROMADB_IP=chromadb
+      - HOST_CHROMADB_PORT=8000
+      - DB_HISTORY=cripto
+      - DB_ACTUALLY=cripto
+      - NAME_COIN=wif
+      - TOKEN_TELEGRAM=7568333649:AAFP499OGJLF-GxDAqzSe3YVwuvxvjW1ZcU
+    networks:
+      - app-network
+
+volumes:
+  mongodb_data:
+    driver: local
+  chromadb_data:
+    driver: local
+
+networks:
+  app-network:
+    driver: bridge 

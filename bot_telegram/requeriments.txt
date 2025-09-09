@@ -1,0 +1,11 @@
+python-telegram-bot==22.0
+pymongo==4.10.1
+pandas==2.2.3
+numpy==1.26.4
+mplfinance
+plotly==5.24.1
+matplotlib==3.10.0
+matplotlib-inline==0.1.7
+chromadb==0.5.23
+chromadb-client==0.6.3
+python-dotenv==1.0.1
